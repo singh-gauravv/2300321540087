@@ -535,4 +535,195 @@ const ws = new WebSocket(
 5. **Server closes** connection on inactivity (5+ minutes without heartbeat)
 6. **Client reconnects** automatically upon disconnect
 
+---
+
+# Stage 2
+
+## Database Selection & Schema
+
+### Recommended Database: PostgreSQL
+
+**Rationale:**
+- Handles high-volume transactional data with ACID compliance
+- Efficient indexing for user-based queries (critical for notifications)
+- Strong support for JSON fields (metadata storage)
+- Excellent scalability with partitioning capabilities
+
+---
+
+## Database Schema
+
+### Notifications Table
+
+```sql
+CREATE TABLE notifications (
+  id VARCHAR(50) PRIMARY KEY,
+  user_id VARCHAR(50) NOT NULL,
+  title VARCHAR(100) NOT NULL,
+  message VARCHAR(500) NOT NULL,
+  type VARCHAR(50) NOT NULL,
+  priority VARCHAR(20) DEFAULT 'medium',
+  status VARCHAR(20) DEFAULT 'unread',
+  category VARCHAR(50),
+  action_url TEXT,
+  metadata JSONB,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP,
+  
+  CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE INDEX idx_user_status ON notifications(user_id, status);
+CREATE INDEX idx_user_created ON notifications(user_id, created_at DESC);
+CREATE INDEX idx_expires_at ON notifications(expires_at) WHERE expires_at IS NOT NULL;
+CREATE INDEX idx_user_unread ON notifications(user_id) WHERE status = 'unread';
+```
+
+### Users Table
+
+```sql
+CREATE TABLE users (
+  id VARCHAR(50) PRIMARY KEY,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+## Scalability Challenges & Solutions
+
+### Problem 1: Large Data Volume (Millions of Notifications)
+
+**Challenge:** Queries on single user slow down as notification count grows.
+
+**Solution:**
+- **Table Partitioning:** Partition by `user_id` or time-based (monthly)
+```sql
+CREATE TABLE notifications_y2026m06 PARTITION OF notifications
+  FOR VALUES FROM ('2026-06-01') TO ('2026-07-01');
+```
+
+- **Archival:** Move old notifications (>90 days) to archive table
+```sql
+CREATE TABLE notifications_archive LIKE notifications;
+```
+
+### Problem 2: Index Bloat & Query Performance
+
+**Challenge:** Frequent read/write operations cause index fragmentation.
+
+**Solution:**
+- Regular VACUUM and ANALYZE
+- Use covering indexes for common queries
+```sql
+CREATE INDEX idx_user_query ON notifications(user_id, status, created_at DESC) 
+  INCLUDE (id, title, priority);
+```
+
+### Problem 3: Storage Growth
+
+**Challenge:** Metadata and message text increase storage requirements.
+
+**Solution:**
+- Compress old data with PostgreSQL compression
+- Store large payloads in object storage (S3), keep reference in metadata
+- Implement TTL-based cleanup for expired notifications
+
+---
+
+## SQL Queries (Based on Stage 1 APIs)
+
+### 1. Get All Notifications for User (with filtering)
+
+```sql
+SELECT id, user_id, title, message, type, priority, status, category, action_url, created_at
+FROM notifications
+WHERE user_id = $1
+  AND ($2::varchar IS NULL OR status = $2)
+ORDER BY created_at DESC
+LIMIT $3 OFFSET $4;
+```
+
+### 2. Get Specific Notification
+
+```sql
+SELECT id, user_id, title, message, type, priority, status, category, action_url, created_at
+FROM notifications
+WHERE id = $1 AND user_id = $2;
+```
+
+### 3. Mark Single Notification as Read
+
+```sql
+UPDATE notifications
+SET status = 'read', updated_at = CURRENT_TIMESTAMP
+WHERE id = $1 AND user_id = $2
+RETURNING id, status;
+```
+
+### 4. Mark Multiple Notifications as Read
+
+```sql
+UPDATE notifications
+SET status = 'read', updated_at = CURRENT_TIMESTAMP
+WHERE user_id = $1 AND id = ANY($2::varchar[])
+RETURNING COUNT(*) as updated_count;
+```
+
+### 5. Delete Notification
+
+```sql
+DELETE FROM notifications
+WHERE id = $1 AND user_id = $2;
+```
+
+### 6. Delete Multiple Notifications
+
+```sql
+DELETE FROM notifications
+WHERE user_id = $1 AND id = ANY($2::varchar[])
+RETURNING COUNT(*) as deleted_count;
+```
+
+### 7. Get Unread Notification Count
+
+```sql
+SELECT 
+  COUNT(*) FILTER (WHERE status = 'unread') as unread_count,
+  COUNT(*) as total_count
+FROM notifications
+WHERE user_id = $1;
+```
+
+### 8. Mark All Notifications as Read
+
+```sql
+UPDATE notifications
+SET status = 'read', updated_at = CURRENT_TIMESTAMP
+WHERE user_id = $1 AND status = 'unread'
+RETURNING COUNT(*) as marked_count;
+```
+
+### 9. Clean Up Expired Notifications
+
+```sql
+DELETE FROM notifications
+WHERE expires_at IS NOT NULL AND expires_at < CURRENT_TIMESTAMP;
+```
+
+### 10. Archive Old Notifications (>90 days)
+
+```sql
+INSERT INTO notifications_archive
+SELECT * FROM notifications
+WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '90 days'
+  AND status = 'read';
+
+DELETE FROM notifications
+WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '90 days'
+  AND status = 'read';
+```
+
 
