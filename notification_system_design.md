@@ -51,50 +51,20 @@ Cache-Control: no-cache
 **Response Body:**
 ```json
 {
-  "success": true,
-  "data": {
-    "notifications": [
-      {
-        "id": "notif_123456",
-        "userId": "user_789",
-        "title": "New Message",
-        "message": "You have a new message from John Doe",
-        "type": "message",
-        "priority": "high",
-        "status": "unread",
-        "category": "communication",
-        "actionUrl": "/messages/msg_001",
-        "imageUrl": "https://api.example.com/images/icon-message.png",
-        "metadata": {
-          "sourceId": "msg_001",
-          "sourceType": "message"
-        },
-        "createdAt": "2026-06-09T10:30:00Z",
-        "updatedAt": "2026-06-09T10:30:00Z",
-        "expiresAt": null
-      }
-    ],
-    "pagination": {
-      "currentPage": 1,
-      "pageSize": 20,
-      "totalRecords": 45,
-      "totalPages": 3
+  "data": [
+    {
+      "id": "notif_123456",
+      "userId": "user_789",
+      "title": "New Message",
+      "message": "You have a new message from John Doe",
+      "type": "message",
+      "priority": "high",
+      "status": "unread",
+      "category": "communication",
+      "actionUrl": "/messages/msg_001",
+      "createdAt": "2026-06-09T10:30:00Z"
     }
-  },
-  "message": "Notifications retrieved successfully",
-  "timestamp": "2026-06-09T10:35:12Z"
-}
-```
-
-**Error Response (401 Unauthorized):**
-```json
-{
-  "success": false,
-  "error": {
-    "code": "UNAUTHORIZED",
-    "message": "Invalid or expired authentication token"
-  },
-  "timestamp": "2026-06-09T10:35:12Z"
+  ]
 }
 ```
 
@@ -121,7 +91,6 @@ Accept: application/json
 **Response Body:**
 ```json
 {
-  "success": true,
   "data": {
     "id": "notif_123456",
     "userId": "user_789",
@@ -132,17 +101,8 @@ Accept: application/json
     "status": "unread",
     "category": "communication",
     "actionUrl": "/messages/msg_001",
-    "imageUrl": "https://api.example.com/images/icon-message.png",
-    "metadata": {
-      "sourceId": "msg_001",
-      "sourceType": "message"
-    },
-    "createdAt": "2026-06-09T10:30:00Z",
-    "updatedAt": "2026-06-09T10:30:00Z",
-    "expiresAt": null
-  },
-  "message": "Notification retrieved successfully",
-  "timestamp": "2026-06-09T10:35:12Z"
+    "createdAt": "2026-06-09T10:30:00Z"
+  }
 }
 ```
 
@@ -166,10 +126,7 @@ Content-Type: application/json
 
 **Request Body:**
 ```json
-{
-  "status": "read",
-  "readAt": "2026-06-09T10:35:12Z"
-}
+{}
 ```
 
 **HTTP Status Code:** `200 OK`
@@ -177,15 +134,10 @@ Content-Type: application/json
 **Response Body:**
 ```json
 {
-  "success": true,
   "data": {
     "id": "notif_123456",
-    "userId": "user_789",
-    "status": "read",
-    "updatedAt": "2026-06-09T10:35:12Z"
-  },
-  "message": "Notification marked as read",
-  "timestamp": "2026-06-09T10:35:12Z"
+    "status": "read"
+  }
 }
 ```
 
@@ -209,11 +161,7 @@ Content-Type: application/json
 **Request Body:**
 ```json
 {
-  "notificationIds": [
-    "notif_123456",
-    "notif_789012",
-    "notif_345678"
-  ]
+  "notificationIds": ["notif_123456", "notif_789012", "notif_345678"]
 }
 ```
 
@@ -222,18 +170,9 @@ Content-Type: application/json
 **Response Body:**
 ```json
 {
-  "success": true,
   "data": {
-    "updatedCount": 3,
-    "notificationIds": [
-      "notif_123456",
-      "notif_789012",
-      "notif_345678"
-    ],
-    "timestamp": "2026-06-09T10:35:12Z"
-  },
-  "message": "3 notifications marked as read",
-  "timestamp": "2026-06-09T10:35:12Z"
+    "updatedCount": 3
+  }
 }
 ```
 
@@ -256,14 +195,7 @@ Authorization: Bearer {access_token}
 
 **HTTP Status Code:** `204 No Content`
 
-**Response Body:** (Empty for 204, or optional JSON)
-```json
-{
-  "success": true,
-  "message": "Notification deleted successfully",
-  "timestamp": "2026-06-09T10:35:12Z"
-}
-```
+**Response Body:** (Empty)
 
 ---
 
@@ -285,11 +217,7 @@ Content-Type: application/json
 **Request Body:**
 ```json
 {
-  "notificationIds": [
-    "notif_123456",
-    "notif_789012",
-    "notif_345678"
-  ]
+  "notificationIds": ["notif_123456", "notif_789012", "notif_345678"]
 }
 ```
 
@@ -298,17 +226,9 @@ Content-Type: application/json
 **Response Body:**
 ```json
 {
-  "success": true,
   "data": {
-    "deletedCount": 3,
-    "notificationIds": [
-      "notif_123456",
-      "notif_789012",
-      "notif_345678"
-    ]
-  },
-  "message": "3 notifications deleted successfully",
-  "timestamp": "2026-06-09T10:35:12Z"
+    "deletedCount": 3
+  }
 }
 ```
 
@@ -334,14 +254,10 @@ Accept: application/json
 **Response Body:**
 ```json
 {
-  "success": true,
   "data": {
-    "userId": "user_789",
     "unreadCount": 12,
     "totalCount": 45
-  },
-  "message": "Unread count retrieved successfully",
-  "timestamp": "2026-06-09T10:35:12Z"
+  }
 }
 ```
 
@@ -364,9 +280,7 @@ Content-Type: application/json
 
 **Request Body:**
 ```json
-{
-  "markAllAsRead": true
-}
+{}
 ```
 
 **HTTP Status Code:** `200 OK`
@@ -374,13 +288,9 @@ Content-Type: application/json
 **Response Body:**
 ```json
 {
-  "success": true,
   "data": {
-    "markedCount": 12,
-    "timestamp": "2026-06-09T10:35:12Z"
-  },
-  "message": "All notifications marked as read",
-  "timestamp": "2026-06-09T10:35:12Z"
+    "markedCount": 12
+  }
 }
 ```
 
@@ -493,10 +403,6 @@ Content-Type: application/json
 {
   "type": "object",
   "properties": {
-    "success": {
-      "type": "boolean",
-      "value": false
-    },
     "error": {
       "type": "object",
       "properties": {
@@ -515,21 +421,12 @@ Content-Type: application/json
         "message": {
           "type": "string",
           "description": "Human-readable error message"
-        },
-        "details": {
-          "type": "object",
-          "description": "Additional error details (optional)",
-          "additionalProperties": true
         }
       },
       "required": ["code", "message"]
-    },
-    "timestamp": {
-      "type": "string",
-      "format": "date-time"
     }
   },
-  "required": ["success", "error", "timestamp"]
+  "required": ["error"]
 }
 ```
 
@@ -577,17 +474,8 @@ const ws = new WebSocket(
     "priority": "high",
     "status": "unread",
     "category": "communication",
-    "actionUrl": "/messages/msg_001",
-    "imageUrl": "https://api.example.com/images/icon-message.png",
-    "metadata": {
-      "sourceId": "msg_001",
-      "sourceType": "message"
-    },
-    "createdAt": "2026-06-09T10:30:00Z",
-    "updatedAt": "2026-06-09T10:30:00Z",
-    "expiresAt": null
-  },
-  "timestamp": "2026-06-09T10:30:00Z"
+    "actionUrl": "/messages/msg_001"
+  }
 }
 ```
 
@@ -598,11 +486,8 @@ const ws = new WebSocket(
   "type": "notification:updated",
   "data": {
     "id": "notif_123456",
-    "userId": "user_789",
-    "status": "read",
-    "updatedAt": "2026-06-09T10:35:00Z"
-  },
-  "timestamp": "2026-06-09T10:35:00Z"
+    "status": "read"
+  }
 }
 ```
 
@@ -612,10 +497,8 @@ const ws = new WebSocket(
 {
   "type": "notification:deleted",
   "data": {
-    "id": "notif_123456",
-    "userId": "user_789"
-  },
-  "timestamp": "2026-06-09T10:35:00Z"
+    "id": "notif_123456"
+  }
 }
 ```
 
@@ -626,10 +509,8 @@ const ws = new WebSocket(
   "type": "connection:established",
   "data": {
     "userId": "user_789",
-    "connectionId": "conn_abc123",
-    "message": "Connected to notification stream"
-  },
-  "timestamp": "2026-06-09T10:30:00Z"
+    "connectionId": "conn_abc123"
+  }
 }
 ```
 
@@ -641,8 +522,7 @@ const ws = new WebSocket(
   "data": {
     "code": "UNAUTHORIZED",
     "message": "Invalid authentication token"
-  },
-  "timestamp": "2026-06-09T10:30:00Z"
+  }
 }
 ```
 
