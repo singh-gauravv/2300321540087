@@ -726,4 +726,84 @@ WHERE created_at < CURRENT_TIMESTAMP - INTERVAL '90 days'
   AND status = 'read';
 ```
 
+---
+
+# Stage 3
+
+## Query Performance Analysis
+
+### Original Query Issues
+
+```sql
+SELECT * FROM notifications
+WHERE studentID = 1042 AND isRead = false
+ORDER BY createdAt ASC;
+```
+
+**Problems:**
+1. `SELECT *` - Fetches all columns; wastes memory and network bandwidth
+2. No index on `(studentID, isRead)` - Full table scan on 5M rows
+3. `isRead = false` - Inefficient; should use `status = 'unread'` (from Stage 2 schema)
+4. Column naming inconsistency (studentID vs user_id)
+
+**Why it's slow:** With 50K students × 5M notifications, without proper indexes, the query scans entire table.
+
+**Computation Cost:** ~O(5M) row scans = high I/O
+
+---
+
+## Optimized Query
+
+```sql
+SELECT id, user_id, title, message, type, priority, status, category, action_url, created_at
+FROM notifications
+WHERE user_id = $1 AND status = 'unread'
+ORDER BY created_at ASC
+LIMIT 100;
+```
+
+**Changes:**
+- Select only required columns
+- Use indexed columns: `(user_id, status)`
+- Limit result set
+- Use consistent naming from Stage 2 schema
+
+**Computation Cost:** ~O(log N + K) where K = result rows = much faster
+
+---
+
+## Index Strategy Discussion
+
+**Adding indexes to every column - NOT effective:**
+- ❌ Bloats database size
+- ❌ Slows down INSERT/UPDATE operations
+- ❌ Maintenance overhead (VACUUM, ANALYZE)
+- ✅ Index only frequently filtered columns: `(user_id, status, created_at)`
+
+**Recommended Indexes (from Stage 2):**
+```sql
+CREATE INDEX idx_user_status ON notifications(user_id, status);
+CREATE INDEX idx_user_created ON notifications(user_id, created_at DESC);
+CREATE INDEX idx_user_unread ON notifications(user_id) WHERE status = 'unread';
+```
+
+---
+
+## Query: Placement Notifications (Last 7 Days)
+
+```sql
+SELECT id, user_id, title, message, created_at
+FROM notifications
+WHERE notification_type = 'Placement'
+  AND created_at >= CURRENT_TIMESTAMP - INTERVAL '7 days'
+ORDER BY created_at DESC;
+```
+
+**With Index:**
+```sql
+CREATE INDEX idx_type_created ON notifications(notification_type, created_at DESC);
+```
+
+**Result:** Indexes filter rows efficiently; returns all placement notifications within 7 days.
+
 
