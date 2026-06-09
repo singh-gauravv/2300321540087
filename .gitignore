@@ -1,4 +1,5 @@
 node_modules/
+notification_app_be/node_modules/
 dist/
 *.log
 .env
