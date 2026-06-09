@@ -1003,4 +1003,49 @@ def push_worker(event):
 
 **Result:** no notification data is lost, and failed deliveries are retried independently.
 
+---
+
+# Stage 6
+
+## Priority Inbox Approach
+
+**Goal:** return top `n` unread notifications ranked by weight and recency.
+
+**Weight order:**
+- Placement = 3
+- Result = 2
+- Event = 1
+
+**Score formula:**
+- `score = weight * large_constant - age_in_seconds`
+- higher score means higher priority
+
+## Efficient Maintenance
+
+**Strategy:** use a min-heap of size `n`.
+- push notifications one by one
+- if heap size exceeds `n`, pop the smallest score
+- final heap contains top `n`
+
+**Why this works:**
+- O(m log n) for `m` notifications
+- keeps memory bounded for top `n`
+- fast incremental update when new notifications arrive
+
+## Implementation Note
+
+Backend code written in `notification_app_be/priority_inbox.js`.
+- fetches from the provided evaluation API
+- computes score per notification
+- returns top 10 sorted by priority and timestamp
+
+## Maintenance with New Notifications
+
+When new notifications arrive:
+- compute score immediately
+- compare with heap root
+- replace if higher priority
+
+This keeps the top `n` current without recomputing the full list every time.
+
 
