@@ -1,0 +1,157 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Font Families */
+  --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Harmonious Light Mode Colors (Slate & Indigo Palette) */
+  --bg-app: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --bg-input: #ffffff;
+  
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: #64748b;
+  
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --accent-light: #e0e7ff;
+  
+  --border: #e2e8f0;
+  --border-focus: #cbd5e1;
+  
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-neon: 0 0 20px rgba(99, 102, 241, 0.15);
+
+  /* Specific Badge/Status Colors (Light) */
+  --color-placement-bg: #ecfdf5;
+  --color-placement-text: #047857;
+  --color-placement-border: #a7f3d0;
+
+  --color-result-bg: #eff6ff;
+  --color-result-text: #1d4ed8;
+  --color-result-border: #bfdbfe;
+
+  --color-event-bg: #fffbeb;
+  --color-event-text: #b45309;
+  --color-event-border: #fde68a;
+
+  --color-new-bg: #f5f3ff;
+  --color-new-text: #7c3aed;
+  --color-new-border: #ddd6fe;
+
+  --color-error-bg: #fef2f2;
+  --color-error-text: #b91c1c;
+  --color-error-border: #fca5a5;
+
+  --color-loading-bg: #f8fafc;
+  --color-loading-text: #0284c7;
+  --color-loading-border: #bae6fd;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Rich Dark Mode Colors (Deep space slate and vibrant neon accents) */
+    --bg-app: #080c14;
+    --bg-card: #0f172a;
+    --bg-card-hover: #1e293b;
+    --bg-input: #1e293b;
+    
+    --text-primary: #f8fafc;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    
+    --accent: #818cf8;
+    --accent-hover: #6366f1;
+    --accent-light: #1e1b4b;
+    
+    --border: #1e293b;
+    --border-focus: #334155;
+    
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.5);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 20px 25px -5px rgb(0 0 0 / 0.5), 0 8px 10px -6px rgb(0 0 0 / 0.5);
+    --shadow-neon: 0 0 25px rgba(99, 102, 241, 0.25);
+
+    /* Specific Badge/Status Colors (Dark) */
+    --color-placement-bg: rgba(16, 185, 129, 0.1);
+    --color-placement-text: #34d399;
+    --color-placement-border: rgba(16, 185, 129, 0.25);
+
+    --color-result-bg: rgba(59, 130, 246, 0.1);
+    --color-result-text: #60a5fa;
+    --color-result-border: rgba(59, 130, 246, 0.25);
+
+    --color-event-bg: rgba(245, 158, 11, 0.1);
+    --color-event-text: #fbbf24;
+    --color-event-border: rgba(245, 158, 11, 0.25);
+
+    --color-new-bg: rgba(139, 92, 246, 0.15);
+    --color-new-text: #a78bfa;
+    --color-new-border: rgba(139, 92, 246, 0.3);
+
+    --color-error-bg: rgba(239, 68, 68, 0.1);
+    --color-error-text: #f87171;
+    --color-error-border: rgba(239, 68, 68, 0.25);
+
+    --color-loading-bg: rgba(14, 165, 233, 0.05);
+    --color-loading-text: #38bdf8;
+    --color-loading-border: rgba(14, 165, 233, 0.2);
+  }
+}
+
+/* Base resets & layout */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  line-height: 1.5;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Global inputs resetting */
+input, select, button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Smooth scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
+}

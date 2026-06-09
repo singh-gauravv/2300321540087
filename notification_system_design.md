@@ -1005,47 +1005,49 @@ def push_worker(event):
 
 ---
 
+
+
 # Stage 6
 
 ## Priority Inbox Approach
 
-**Goal:** return top `n` unread notifications ranked by weight and recency.
+**Goal:** return top `n` unread notifications by importance and recency.
 
-**Weight order:**
+**Weights:**
 - Placement = 3
 - Result = 2
 - Event = 1
 
-**Score formula:**
-- `score = weight * large_constant - age_in_seconds`
-- higher score means higher priority
+**Ranking:**
+- `score = weight * 1e12 - timestamp_seconds`
+- higher score = higher priority
 
-## Efficient Maintenance
+## Efficient Algorithm
 
-**Strategy:** use a min-heap of size `n`.
-- push notifications one by one
-- if heap size exceeds `n`, pop the smallest score
-- final heap contains top `n`
+**Approach:** maintain a min-heap of size `n`.
+- push each notification with its score
+- if heap size > `n`, pop the smallest score
+- final heap holds the top `n` notifications
 
-**Why this works:**
+**Performance:**
 - O(m log n) for `m` notifications
-- keeps memory bounded for top `n`
-- fast incremental update when new notifications arrive
+- bounded memory for top `n`
+- supports incremental updates on new notifications
 
-## Implementation Note
+## Implementation
 
-Backend code written in `notification_app_be/priority_inbox.js`.
-- fetches from the provided evaluation API
-- computes score per notification
-- returns top 10 sorted by priority and timestamp
+- Backend code file: `notification_app_be/priority_inbox.js`
+- Fetches notifications from the provided API
+- Computes score per notification and keeps top 10
+- Returns top notifications sorted by priority and recency
 
-## Maintenance with New Notifications
+## New Notification Handling
 
-When new notifications arrive:
-- compute score immediately
-- compare with heap root
-- replace if higher priority
+When a new notification arrives:
+- compute its score
+- compare to heap root
+- replace root if the new score is higher
 
-This keeps the top `n` current without recomputing the full list every time.
+This keeps the top `n` current without full recompute.
 
 
