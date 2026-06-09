@@ -916,4 +916,91 @@ Route all SELECT queries to read replicas
 | Server Response | 100-500ms | 20-50ms |
 | Cache Hit Rate | N/A | 85-90% |
 
+---
+
+# Stage 5
+
+## Problem with the Original `notify_all` Flow
+
+Original pseudocode:
+```
+for student_id in student_ids:
+  send_email(student_id, message)
+  save_to_db(student_id, message)
+  push_to_app(student_id, message)
+```
+
+**Shortcomings:**
+- No retry or failure handling for email delivery
+- `send_email` failure on 200 students leaves partial delivery
+- Mixing email send and DB insert synchronously blocks the loop
+- No durability or idempotency for retrying failed operations
+- Real-time push depends on immediate success, not persistence
+
+---
+
+## Reliable, Fast Redesign
+
+**Approach:** persist first, then publish work to queues.
+
+**Revised flow:**
+```
+def notify_all(student_ids, message):
+  for student_id in student_ids:
+    notification_id = save_notification(student_id, message)
+    enqueue_event('notification_created', {
+      'notification_id': notification_id,
+      'student_id': student_id,
+      'message': message
+    })
+```
+
+worker 1: process notification_created
+```
+def notification_worker(event):
+  notification = load_notification(event.notification_id)
+  if notification.status != 'sent':
+    if send_email(event.student_id, event.message):
+      mark_notification_sent(notification.id)
+    else:
+      retry_or_dead_letter(event)
+```
+
+worker 2: push app notification
+```
+def push_worker(event):
+  push_to_app(event.student_id, event.message)
+```
+```
+
+**Why this is better:**
+- DB save happens reliably before external calls
+- email sending and app push are asynchronous
+- failed sends can be retried without losing DB records
+- system scales with queue consumers
+- user-facing notification state is persisted for later recovery
+
+---
+
+## Should DB save and email send happen together?
+
+**Answer:** No, not synchronously.
+- Save to DB first for durability
+- Then publish events for email and app push
+- Use outbox or transactional log to ensure events are not lost
+
+**Why:** this avoids partial failures and makes retries safe.
+
+---
+
+## Handling the 200 failed emails mid-way
+
+**If email fails:**
+- keep notification record
+- mark `email_status = 'pending'` or `failed`
+- enqueue retry job
+- optionally send alert after repeated failures
+
+**Result:** no notification data is lost, and failed deliveries are retried independently.
+
 
